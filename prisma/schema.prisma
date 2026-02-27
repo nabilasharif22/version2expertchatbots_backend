@@ -1,0 +1,67 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Debate {
+  id           String   @id @default(cuid())
+  topic        String
+  scientistA   String
+  scientistB   String
+  firstSpeaker String   // "A" | "B"
+  totalTurns   Int
+  status       Status   @default(running)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  messages       Message[]
+  visualizations Visualization[]
+
+  @@index([createdAt])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  debateId  String
+  turn      Int
+  speaker   Speaker
+  model     String
+  text      String
+  createdAt DateTime @default(now())
+
+  debate Debate @relation(fields: [debateId], references: [id], onDelete: Cascade)
+
+  @@index([debateId, turn])
+  @@index([createdAt])
+}
+
+model Visualization {
+  id        String   @id @default(cuid())
+  debateId  String
+  kind      String
+  chart     String
+  title     String?
+  labels    Json?
+  series    Json
+  createdAt DateTime @default(now())
+
+  debate Debate @relation(fields: [debateId], references: [id], onDelete: Cascade)
+
+  @@index([debateId, createdAt])
+}
+
+enum Status {
+  running
+  done
+  error
+}
+
+enum Speaker {
+  A
+  B
+}
